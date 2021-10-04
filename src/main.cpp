@@ -270,7 +270,7 @@ void setup()
   {
     // Sets controls
     digitalWrite(CE, LOW);
-    digitalWrite(WE, LOW);
+    digitalWrite(WE, HIGH);
     digitalWrite(OE, HIGH);
     // Sets Adress
     digitalWrite(AD0, GetBit(i, 1) ? HIGH : LOW);
@@ -293,6 +293,11 @@ void setup()
     digitalWrite(IO5, GetBit(eeprom_data[i], 6) ? HIGH : LOW);
     digitalWrite(IO6, GetBit(eeprom_data[i], 7) ? HIGH : LOW);
     digitalWrite(IO7, GetBit(eeprom_data[i], 8) ? HIGH : LOW);
+
+    // Sets controls
+    digitalWrite(CE, LOW);
+    digitalWrite(WE, LOW);
+    digitalWrite(OE, HIGH);
     delay(50);
   }
 }
