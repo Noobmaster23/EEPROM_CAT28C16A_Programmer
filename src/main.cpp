@@ -32,15 +32,16 @@
 #define EEPROM_ADDRESS_LENGTH 11
 #define EEPROM_ADDRESS_SIZE 2048
 
-const unsigned char eeprom_number = 3;
+const unsigned char eeprom_number = 1;
 
 unsigned char eeprom_data[EEPROM_ADDRESS_SIZE];
 
 // Functions
 // Gets bit from an int
+// https://www.studymite.com/cpp/examples/program-to-get-nth-bit-of-a-number-in-cpp/
 bool GetBit(unsigned int b, unsigned int bitNumber)
 {
-  return (b & (1 << (bitNumber - 1))) != 0;
+  return (1 & (b >> (bitNumber - 1)));
 }
 
 void setup()
@@ -294,16 +295,12 @@ void setup()
     digitalWrite(IO7, GetBit(eeprom_data[i], 8) ? HIGH : LOW);
     delay(50);
   }
-  // Finished
-  while (1)
-  {
-    digitalWrite(LED_BUILTIN, HIGH);
-    delay(1000);
-    digitalWrite(LED_BUILTIN, LOW);
-    delay(1000);
-  }
 }
 
 void loop()
 {
+  digitalWrite(LED_BUILTIN, HIGH);
+  delay(1000);
+  digitalWrite(LED_BUILTIN, LOW);
+  delay(1000);
 }
