@@ -300,6 +300,9 @@ void setup()
     digitalWrite(OE, HIGH);
     delay(50);
   }
+
+  // Disable EEPROM
+  digitalWrite(CE, HIGH);
 }
 
 void loop()
