@@ -10,14 +10,14 @@
 #define EEPROM_NUMBER 1
 
 // GPIO pin definitions
-#define IO0 12 // F -> 13
+#define IO0 13 // F -> 13
 #define IO1 1  // T
 #define IO2 3  // T
 #define IO3 4  // T
 #define IO4 2  // T
-#define IO5 5  // F -> 15
-#define IO6 18 // F -> 5
-#define IO7 19 // F -> 18
+#define IO5 15 // F -> 15
+#define IO6 5  // F -> 5
+#define IO7 18 // F -> 18
 
 #define AD0 12  // T
 #define AD1 14  // T
