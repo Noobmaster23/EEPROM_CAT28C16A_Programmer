@@ -1,38 +1,44 @@
 #include <Arduino.h>
 #include <math.h>
 
+// Debugging
+#define DEBUG true
+#define DEBUG_MODE 3 // 0 = Off, 1 = Array, 2 = Output, 3 = LED
+#define DEBUG_COUNTER_VALUE 12
+
+// Mode
+#define EEPROM_NUMBER 1
+
 // GPIO pin definitions
-#define IO0 12
-#define IO1 1
-#define IO2 3
-#define IO3 4
-#define IO4 2
-#define IO5 5
-#define IO6 18
-#define IO7 19
+#define IO0 12 // F -> 13
+#define IO1 1  // T
+#define IO2 3  // T
+#define IO3 4  // T
+#define IO4 2  // T
+#define IO5 5  // F -> 15
+#define IO6 18 // F -> 5
+#define IO7 19 // F -> 18
 
-#define AD0 12
-#define AD1 14
-#define AD2 27
-#define AD3 26
-#define AD4 25
-#define AD5 33
-#define AD6 32
-#define AD7 35
-#define AD8 23
-#define AD9 22
-#define AD10 21
+#define AD0 12  // T
+#define AD1 14  // T
+#define AD2 27  // T
+#define AD3 26  // T
+#define AD4 25  // T
+#define AD5 33  // T
+#define AD6 32  // T
+#define AD7 35  // T
+#define AD8 23  // T
+#define AD9 22  // T
+#define AD10 21 // T
 
-#define WE 16
-#define OE 17
-#define CE 19
+#define WE 16 // T
+#define OE 17 // T
+#define CE 19 // T
 
 // Data to write to EEPROM
 #define EEPROM_DATA_LENGTH 8
 #define EEPROM_ADDRESS_LENGTH 11
 #define EEPROM_ADDRESS_SIZE 2048
-
-const unsigned char eeprom_number = 1;
 
 unsigned char eeprom_data[EEPROM_ADDRESS_SIZE];
 
@@ -44,196 +50,198 @@ bool GetBit(unsigned int b, unsigned int bitNumber)
   return (1 & (b >> (bitNumber - 1)));
 }
 
+// Debugging
+// #if DEBUG
+// #if DEBUG_MODE == 3
+// unsigned int counter = 0;
+// #endif
+// #endif
+
 void setup()
 {
+// Debuging
+#if DEBUG
+#if DEBUG_MODE != 3
+  {
+    Serial.begin(9600);
+  }
+#endif
+#endif
+
   // Set Array all to 0
   for (unsigned short int i = 0; i < EEPROM_ADDRESS_SIZE; i++)
   {
-    if (GetBit(i, 9) && !GetBit(i, 10) && !GetBit(i, 11))
+    if (GetBit(i, 3) && !GetBit(i, 2) && !GetBit(i, 1))
     {
-      // Because the Instruction has to be loaded every time set the instruction for the first step for every instruction to the same value
-      switch (eeprom_number)
-      {
-      case 1:
-        eeprom_data[i] = 0b00000001;
-        break;
-      case 2:
-        eeprom_data[i] = 0b00000000;
-        break;
-      case 3:
-        eeprom_data[i] = 0b10000000;
-        break;
-      default:
-        break;
-      }
+// Because the Instruction has to be loaded every time set the instruction for the first step for every instruction to the same value
+#if EEPROM_NUMBER == 1
+      eeprom_data[i] = 0b00000001;
+#elif EEPROM_NUMBER == 2
+      eeprom_data[i] = 0b00000000;
+#elif EEPROM_NUMBER == 3
+      eeprom_data[i] = 0b10000000;
+#endif
     }
     else
     {
       eeprom_data[i] = 0;
     }
   }
-  // Sets wanted EEPROM Data for the three EEPROMS
-  switch (eeprom_number)
-  {
-  case 1:
-    // IA
-    eeprom_data[0b00000001100] = 0b00000001;
-    eeprom_data[0b00000001010] = 0b00000001;
-    eeprom_data[0b00000001110] = 0b01000000;
-    // IB
-    eeprom_data[0b00000010100] = 0b00000001;
-    eeprom_data[0b00000010010] = 0b00000001;
-    eeprom_data[0b00000010110] = 0b00010000;
-    // ADD
-    eeprom_data[0b00000011100] = 0b00000001;
-    eeprom_data[0b00000011010] = 0b00000001;
-    eeprom_data[0b00000011110] = 0b00001000;
-    // SUB
-    eeprom_data[0b00000100100] = 0b00000001;
-    eeprom_data[0b00000100010] = 0b00000001;
-    eeprom_data[0b00000100110] = 0b00001000;
-    // OA
-    eeprom_data[0b00000101100] = 0b00000001;
-    eeprom_data[0b00000101010] = 0b10000000;
-    // OB
-    eeprom_data[0b00000110100] = 0b00000001;
-    eeprom_data[0b00000110010] = 0b00100000;
-    // SA
-    eeprom_data[0b00000111100] = 0b00000001;
-    eeprom_data[0b00000111010] = 0b00000001;
-    eeprom_data[0b00000111110] = 0b00000000;
-    eeprom_data[0b00000111001] = 0b10000000;
-    // SB
-    eeprom_data[0b00001000100] = 0b00000001;
-    eeprom_data[0b00001000010] = 0b00000001;
-    eeprom_data[0b00001000110] = 0b00000000;
-    eeprom_data[0b00001000001] = 0b00100000;
-    // SADD
-    eeprom_data[0b00001001100] = 0b00000001;
-    eeprom_data[0b00001001010] = 0b00000001;
-    eeprom_data[0b00001001110] = 0b00000000;
-    eeprom_data[0b00001001001] = 0b00100000;
-    // SSUB
-    eeprom_data[0b00001010100] = 0b00000001;
-    eeprom_data[0b00001010010] = 0b00000001;
-    eeprom_data[0b00001010110] = 0b00000000;
-    eeprom_data[0b00001010001] = 0b00100000;
-    // O
-    eeprom_data[0b00001011100] = 0b00000001;
-    eeprom_data[0b00001011010] = 0b00000001;
-    eeprom_data[0b00001011110] = 0b00000000;
-    // JUMP
-    eeprom_data[0b00001100100] = 0b00000001;
-    eeprom_data[0b00001100010] = 0b00000001;
-    eeprom_data[0b00001100110] = 0b00000100;
-    break;
-  case 2:
-    // IA
-    eeprom_data[0b00000001100] = 0b00000000;
-    eeprom_data[0b00000001010] = 0b00111100;
-    eeprom_data[0b00000001110] = 0b00000110;
-    // IB
-    eeprom_data[0b00000010100] = 0b00000000;
-    eeprom_data[0b00000010010] = 0b00111100;
-    eeprom_data[0b00000010110] = 0b00000110;
-    // ADD
-    eeprom_data[0b00000011100] = 0b00000000;
-    eeprom_data[0b00000011010] = 0b00111100;
-    eeprom_data[0b00000011110] = 0b00000000;
-    // SUB
-    eeprom_data[0b00000100100] = 0b00000000;
-    eeprom_data[0b00000100010] = 0b00111100;
-    eeprom_data[0b00000100110] = 0b10000000;
-    // OA
-    eeprom_data[0b00000101100] = 0b00000000;
-    eeprom_data[0b00000101010] = 0b00000000;
-    // OB
-    eeprom_data[0b00000110100] = 0b00000000;
-    eeprom_data[0b00000110010] = 0b00000000;
-    // SA
-    eeprom_data[0b00000111100] = 0b00000000;
-    eeprom_data[0b00000111010] = 0b00111100;
-    eeprom_data[0b00000111110] = 0b00010110;
-    eeprom_data[0b00000111001] = 0b00000011;
-    // SB
-    eeprom_data[0b00001000100] = 0b00000000;
-    eeprom_data[0b00001000010] = 0b00111100;
-    eeprom_data[0b00001000110] = 0b00010110;
-    eeprom_data[0b00001000001] = 0b00000011;
-    // SADD
-    eeprom_data[0b00001001100] = 0b00000000;
-    eeprom_data[0b00001001010] = 0b00111100;
-    eeprom_data[0b00001001110] = 0b00010110;
-    eeprom_data[0b00001001001] = 0b00000011;
-    // SSUB
-    eeprom_data[0b00001010100] = 0b00000000;
-    eeprom_data[0b00001010010] = 0b00111100;
-    eeprom_data[0b00001010110] = 0b00010110;
-    eeprom_data[0b00001010001] = 0b10000011;
-    // O
-    eeprom_data[0b00001011100] = 0b00000000;
-    eeprom_data[0b00001011010] = 0b00111100;
-    eeprom_data[0b00001011110] = 0b00000110;
-    // JUMP
-    eeprom_data[0b00001100100] = 0b00000000;
-    eeprom_data[0b00001100010] = 0b00111100;
-    eeprom_data[0b00001100110] = 0b00001100;
-    break;
-  case 3:
-    // IA
-    eeprom_data[0b00000001100] = 0b10000000;
-    eeprom_data[0b00000001010] = 0b00000000;
-    eeprom_data[0b00000001110] = 0b00000000;
-    // IB
-    eeprom_data[0b00000010100] = 0b10000000;
-    eeprom_data[0b00000010010] = 0b00000000;
-    eeprom_data[0b00000010110] = 0b00000000;
-    // ADD
-    eeprom_data[0b00000011100] = 0b10000000;
-    eeprom_data[0b00000011010] = 0b00000000;
-    eeprom_data[0b00000011110] = 0b01000000;
-    // SUB
-    eeprom_data[0b00000100100] = 0b10000000;
-    eeprom_data[0b00000100010] = 0b00000000;
-    eeprom_data[0b00000100110] = 0b01000000;
-    // OA
-    eeprom_data[0b00000101100] = 0b10000000;
-    eeprom_data[0b00000101010] = 0b01000000;
-    // OB
-    eeprom_data[0b00000110100] = 0b10000000;
-    eeprom_data[0b00000110010] = 0b01000000;
-    // SA
-    eeprom_data[0b00000111100] = 0b10000000;
-    eeprom_data[0b00000111010] = 0b00000000;
-    eeprom_data[0b00000111110] = 0b00000000;
-    eeprom_data[0b00000111001] = 0b00000000;
-    // SB
-    eeprom_data[0b00001000100] = 0b10000000;
-    eeprom_data[0b00001000010] = 0b00000000;
-    eeprom_data[0b00001000110] = 0b00000000;
-    eeprom_data[0b00001000001] = 0b00000000;
-    // SADD
-    eeprom_data[0b00001001100] = 0b10000000;
-    eeprom_data[0b00001001010] = 0b00000000;
-    eeprom_data[0b00001001110] = 0b00000000;
-    eeprom_data[0b00001001001] = 0b00000000;
-    // SSUB
-    eeprom_data[0b00001010100] = 0b10000000;
-    eeprom_data[0b00001010010] = 0b00000000;
-    eeprom_data[0b00001010110] = 0b00000000;
-    eeprom_data[0b00001010001] = 0b00000000;
-    // O
-    eeprom_data[0b00001011100] = 0b10000000;
-    eeprom_data[0b00001011010] = 0b00000000;
-    eeprom_data[0b00001011110] = 0b01000000;
-    // JUMP
-    eeprom_data[0b00001100100] = 0b10000000;
-    eeprom_data[0b00001100010] = 0b00000000;
-    eeprom_data[0b00001100110] = 0b00000000;
-    break;
-  default:
-    break;
-  }
+// Sets wanted EEPROM Data for the three EEPROMS
+#if EEPROM_NUMBER == 1
+  // IA
+  eeprom_data[0b00000001100] = 0b00000001;
+  eeprom_data[0b00000001010] = 0b00000001;
+  eeprom_data[0b00000001110] = 0b01000000;
+  // IB
+  eeprom_data[0b00000010100] = 0b00000001;
+  eeprom_data[0b00000010010] = 0b00000001;
+  eeprom_data[0b00000010110] = 0b00010000;
+  // ADD
+  eeprom_data[0b00000011100] = 0b00000001;
+  eeprom_data[0b00000011010] = 0b00000001;
+  eeprom_data[0b00000011110] = 0b00001000;
+  // SUB
+  eeprom_data[0b00000100100] = 0b00000001;
+  eeprom_data[0b00000100010] = 0b00000001;
+  eeprom_data[0b00000100110] = 0b00001000;
+  // OA
+  eeprom_data[0b00000101100] = 0b00000001;
+  eeprom_data[0b00000101010] = 0b10000000;
+  // OB
+  eeprom_data[0b00000110100] = 0b00000001;
+  eeprom_data[0b00000110010] = 0b00100000;
+  // SA
+  eeprom_data[0b00000111100] = 0b00000001;
+  eeprom_data[0b00000111010] = 0b00000001;
+  eeprom_data[0b00000111110] = 0b00000000;
+  eeprom_data[0b00000111001] = 0b10000000;
+  // SB
+  eeprom_data[0b00001000100] = 0b00000001;
+  eeprom_data[0b00001000010] = 0b00000001;
+  eeprom_data[0b00001000110] = 0b00000000;
+  eeprom_data[0b00001000001] = 0b00100000;
+  // SADD
+  eeprom_data[0b00001001100] = 0b00000001;
+  eeprom_data[0b00001001010] = 0b00000001;
+  eeprom_data[0b00001001110] = 0b00000000;
+  eeprom_data[0b00001001001] = 0b00100000;
+  // SSUB
+  eeprom_data[0b00001010100] = 0b00000001;
+  eeprom_data[0b00001010010] = 0b00000001;
+  eeprom_data[0b00001010110] = 0b00000000;
+  eeprom_data[0b00001010001] = 0b00100000;
+  // O
+  eeprom_data[0b00001011100] = 0b00000001;
+  eeprom_data[0b00001011010] = 0b00000001;
+  eeprom_data[0b00001011110] = 0b00000000;
+  // JUMP
+  eeprom_data[0b00001100100] = 0b00000001;
+  eeprom_data[0b00001100010] = 0b00000001;
+  eeprom_data[0b00001100110] = 0b00000100;
+#elif EEPROM_NUMBER == 2
+  // IA
+  eeprom_data[0b00000001100] = 0b00000000;
+  eeprom_data[0b00000001010] = 0b00111100;
+  eeprom_data[0b00000001110] = 0b00000110;
+  // IB
+  eeprom_data[0b00000010100] = 0b00000000;
+  eeprom_data[0b00000010010] = 0b00111100;
+  eeprom_data[0b00000010110] = 0b00000110;
+  // ADD
+  eeprom_data[0b00000011100] = 0b00000000;
+  eeprom_data[0b00000011010] = 0b00111100;
+  eeprom_data[0b00000011110] = 0b00000000;
+  // SUB
+  eeprom_data[0b00000100100] = 0b00000000;
+  eeprom_data[0b00000100010] = 0b00111100;
+  eeprom_data[0b00000100110] = 0b10000000;
+  // OA
+  eeprom_data[0b00000101100] = 0b00000000;
+  eeprom_data[0b00000101010] = 0b00000000;
+  // OB
+  eeprom_data[0b00000110100] = 0b00000000;
+  eeprom_data[0b00000110010] = 0b00000000;
+  // SA
+  eeprom_data[0b00000111100] = 0b00000000;
+  eeprom_data[0b00000111010] = 0b00111100;
+  eeprom_data[0b00000111110] = 0b00010110;
+  eeprom_data[0b00000111001] = 0b00000011;
+  // SB
+  eeprom_data[0b00001000100] = 0b00000000;
+  eeprom_data[0b00001000010] = 0b00111100;
+  eeprom_data[0b00001000110] = 0b00010110;
+  eeprom_data[0b00001000001] = 0b00000011;
+  // SADD
+  eeprom_data[0b00001001100] = 0b00000000;
+  eeprom_data[0b00001001010] = 0b00111100;
+  eeprom_data[0b00001001110] = 0b00010110;
+  eeprom_data[0b00001001001] = 0b00000011;
+  // SSUB
+  eeprom_data[0b00001010100] = 0b00000000;
+  eeprom_data[0b00001010010] = 0b00111100;
+  eeprom_data[0b00001010110] = 0b00010110;
+  eeprom_data[0b00001010001] = 0b10000011;
+  // O
+  eeprom_data[0b00001011100] = 0b00000000;
+  eeprom_data[0b00001011010] = 0b00111100;
+  eeprom_data[0b00001011110] = 0b00000110;
+  // JUMP
+  eeprom_data[0b00001100100] = 0b00000000;
+  eeprom_data[0b00001100010] = 0b00111100;
+  eeprom_data[0b00001100110] = 0b00001100;
+#elif EEPROM_NUMBER == 3
+  // IA
+  eeprom_data[0b00000001100] = 0b10000000;
+  eeprom_data[0b00000001010] = 0b00000000;
+  eeprom_data[0b00000001110] = 0b00000000;
+  // IB
+  eeprom_data[0b00000010100] = 0b10000000;
+  eeprom_data[0b00000010010] = 0b00000000;
+  eeprom_data[0b00000010110] = 0b00000000;
+  // ADD
+  eeprom_data[0b00000011100] = 0b10000000;
+  eeprom_data[0b00000011010] = 0b00000000;
+  eeprom_data[0b00000011110] = 0b01000000;
+  // SUB
+  eeprom_data[0b00000100100] = 0b10000000;
+  eeprom_data[0b00000100010] = 0b00000000;
+  eeprom_data[0b00000100110] = 0b01000000;
+  // OA
+  eeprom_data[0b00000101100] = 0b10000000;
+  eeprom_data[0b00000101010] = 0b01000000;
+  // OB
+  eeprom_data[0b00000110100] = 0b10000000;
+  eeprom_data[0b00000110010] = 0b01000000;
+  // SA
+  eeprom_data[0b00000111100] = 0b10000000;
+  eeprom_data[0b00000111010] = 0b00000000;
+  eeprom_data[0b00000111110] = 0b00000000;
+  eeprom_data[0b00000111001] = 0b00000000;
+  // SB
+  eeprom_data[0b00001000100] = 0b10000000;
+  eeprom_data[0b00001000010] = 0b00000000;
+  eeprom_data[0b00001000110] = 0b00000000;
+  eeprom_data[0b00001000001] = 0b00000000;
+  // SADD
+  eeprom_data[0b00001001100] = 0b10000000;
+  eeprom_data[0b00001001010] = 0b00000000;
+  eeprom_data[0b00001001110] = 0b00000000;
+  eeprom_data[0b00001001001] = 0b00000000;
+  // SSUB
+  eeprom_data[0b00001010100] = 0b10000000;
+  eeprom_data[0b00001010010] = 0b00000000;
+  eeprom_data[0b00001010110] = 0b00000000;
+  eeprom_data[0b00001010001] = 0b00000000;
+  // O
+  eeprom_data[0b00001011100] = 0b10000000;
+  eeprom_data[0b00001011010] = 0b00000000;
+  eeprom_data[0b00001011110] = 0b01000000;
+  // JUMP
+  eeprom_data[0b00001100100] = 0b10000000;
+  eeprom_data[0b00001100010] = 0b00000000;
+  eeprom_data[0b00001100110] = 0b00000000;
+#endif
   // Sets up the GPIO pins
   pinMode(LED_BUILTIN, OUTPUT);
 
@@ -265,13 +273,14 @@ void setup()
   pinMode(OE, OUTPUT);
   pinMode(CE, OUTPUT);
 
+  digitalWrite(WE, LOW);
+  digitalWrite(OE, HIGH);
+
   // Writes data to EEPROM
   for (unsigned short int i = 0; i < EEPROM_ADDRESS_SIZE; i++)
   {
-    // Sets controls
-    digitalWrite(CE, LOW);
-    digitalWrite(WE, HIGH);
-    digitalWrite(OE, HIGH);
+    // Sets controls (disable, until all pins are set)
+    digitalWrite(CE, HIGH);
     // Sets Adress
     digitalWrite(AD0, GetBit(i, 1) ? HIGH : LOW);
     digitalWrite(AD1, GetBit(i, 2) ? HIGH : LOW);
@@ -294,15 +303,48 @@ void setup()
     digitalWrite(IO6, GetBit(eeprom_data[i], 7) ? HIGH : LOW);
     digitalWrite(IO7, GetBit(eeprom_data[i], 8) ? HIGH : LOW);
 
-    // Sets controls
+    // Debug
+#if DEBUG
+#if DEBUG_MODE == 1
+    Serial.print(i, BIN);
+    Serial.print(" : ");
+    Serial.println(eeprom_data[i], BIN);
+#elif DEBUG_MODE == 2
+    for (unsigned short int j = 0; j < EEPROM_ADDRESS_LENGTH; j++)
+    {
+      Serial.print(GetBit(i, j + 1) ? "1" : "0");
+    }
+    Serial.print(" : ");
+    for (unsigned short int j = 0; j < EEPROM_DATA_LENGTH; j++)
+    {
+      Serial.print(GetBit(eeprom_data[i], j + 1) ? "1" : "0");
+    }
+    Serial.println();
+#elif DEBUG_MODE == 3
+    if (i == DEBUG_COUNTER_VALUE)
+    {
+      while (true)
+      {
+        delay(1000);
+      }
+    }
+#endif
+#endif
+
+    // enable when all pins are set
     digitalWrite(CE, LOW);
-    digitalWrite(WE, LOW);
-    digitalWrite(OE, HIGH);
+    // give time to write
     delay(50);
   }
 
   // Disable EEPROM
   digitalWrite(CE, HIGH);
+
+  // #if DEBUG
+  // #if DEBUG_MODE == 3
+  //   counter++;
+  // #endif
+  // #endif
 }
 
 void loop()
