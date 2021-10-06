@@ -2,9 +2,9 @@
 #include <math.h>
 
 // Debugging
-#define DEBUG true
-#define DEBUG_MODE 3 // 0 = Off, 1 = Array, 2 = Output, 3 = LED
-#define DEBUG_COUNTER_VALUE 12
+#define DEBUG false
+#define DEBUG_MODE 0 // 0 = Off, 1 = Array, 2 = Output, 3 = LED
+#define DEBUG_COUNTER_VALUE 10
 
 // Mode
 #define EEPROM_NUMBER 1
@@ -139,6 +139,9 @@ void setup()
   eeprom_data[0b00001100100] = 0b00000001;
   eeprom_data[0b00001100010] = 0b00000001;
   eeprom_data[0b00001100110] = 0b00000100;
+  // HALT
+  eeprom_data[0b00001101100] = 0b00000001;
+  eeprom_data[0b00001101010] = 0b00000000;
 #elif EEPROM_NUMBER == 2
   // IA
   eeprom_data[0b00000001100] = 0b00000000;
@@ -190,6 +193,9 @@ void setup()
   eeprom_data[0b00001100100] = 0b00000000;
   eeprom_data[0b00001100010] = 0b00111100;
   eeprom_data[0b00001100110] = 0b00001100;
+  // HALT
+  eeprom_data[0b00001101100] = 0b00000000;
+  eeprom_data[0b00001101010] = 0b01000000;
 #elif EEPROM_NUMBER == 3
   // IA
   eeprom_data[0b00000001100] = 0b10000000;
@@ -241,6 +247,9 @@ void setup()
   eeprom_data[0b00001100100] = 0b10000000;
   eeprom_data[0b00001100010] = 0b00000000;
   eeprom_data[0b00001100110] = 0b00000000;
+  // HALT
+  eeprom_data[0b00001101100] = 0b01000000;
+  eeprom_data[0b00001101010] = 0b00000000;
 #endif
   // Sets up the GPIO pins
   pinMode(LED_BUILTIN, OUTPUT);
@@ -273,14 +282,15 @@ void setup()
   pinMode(OE, OUTPUT);
   pinMode(CE, OUTPUT);
 
-  digitalWrite(WE, LOW);
+  digitalWrite(CE, LOW);
   digitalWrite(OE, HIGH);
+  digitalWrite(WE, HIGH);
+
+  delay(25);
 
   // Writes data to EEPROM
   for (unsigned short int i = 0; i < EEPROM_ADDRESS_SIZE; i++)
   {
-    // Sets controls (disable, until all pins are set)
-    digitalWrite(CE, HIGH);
     // Sets Adress
     digitalWrite(AD0, GetBit(i, 1) ? HIGH : LOW);
     digitalWrite(AD1, GetBit(i, 2) ? HIGH : LOW);
@@ -303,7 +313,16 @@ void setup()
     digitalWrite(IO6, GetBit(eeprom_data[i], 7) ? HIGH : LOW);
     digitalWrite(IO7, GetBit(eeprom_data[i], 8) ? HIGH : LOW);
 
+    // enable when all pins are set
+    delay(25);
+    digitalWrite(WE, LOW);
     // Debug
+    // give time to read address
+    delay(25);
+    // Sets controls (disable, until all pins are set)
+    digitalWrite(WE, HIGH);
+    // write data
+    delay(25);
 #if DEBUG
 #if DEBUG_MODE == 1
     Serial.print(i, BIN);
@@ -330,11 +349,6 @@ void setup()
     }
 #endif
 #endif
-
-    // enable when all pins are set
-    digitalWrite(CE, LOW);
-    // give time to write
-    delay(50);
   }
 
   // Disable EEPROM
