@@ -271,11 +271,11 @@ void writeData(int address, int data)
   digitalWrite(IO7, GetBit(data, 8) ? HIGH : LOW);
 
   // enable when all pins are set
-  delayMicroseconds(1);
+  delay(1);
   digitalWrite(WE, LOW);
-  delayMicroseconds(1); // very short pulse
+  delay(1); // very short pulse but according to datasheet no max value
   digitalWrite(WE, HIGH);
-  // write data
+  // write data, max 10ms
   delay(20);
 }
 
@@ -314,7 +314,7 @@ void setWritePins()
   pinMode(OE, OUTPUT);
   pinMode(CE, OUTPUT);
 
-  delayMicroseconds(1);
+  delay(1);
 }
 
 // writes the data from the array to the EEPROM
@@ -359,10 +359,9 @@ void writeEEPROMData()
   digitalWrite(CE, HIGH);
 }
 
-// reads the data from the EEPROM
-void readData()
+// set pins for reading data
+void setReadPins()
 {
-  Serial.begin(9600);
   pinMode(IO0, INPUT);
   pinMode(IO1, INPUT);
   pinMode(IO2, INPUT);
@@ -372,47 +371,95 @@ void readData()
   pinMode(IO6, INPUT);
   pinMode(IO7, INPUT);
 
-  digitalWrite(CE, LOW);
+  pinMode(AD0, OUTPUT);
+  pinMode(AD1, OUTPUT);
+  pinMode(AD2, OUTPUT);
+  pinMode(AD3, OUTPUT);
+  pinMode(AD4, OUTPUT);
+  pinMode(AD5, OUTPUT);
+  pinMode(AD6, OUTPUT);
+  pinMode(AD7, OUTPUT);
+  pinMode(AD8, OUTPUT);
+  pinMode(AD9, OUTPUT);
+  pinMode(AD10, OUTPUT);
+
   digitalWrite(WE, HIGH);
+  digitalWrite(OE, HIGH);
+  digitalWrite(CE, LOW);
+
+  pinMode(WE, OUTPUT);
+  pinMode(OE, OUTPUT);
+  pinMode(CE, OUTPUT);
+
+  delay(1);
+}
+
+// reads data from the EEPROM
+void readData(int address)
+{
+  setReadPins();
+
+  // Sets Adress
+  digitalWrite(AD0, GetBit(address, 1) ? HIGH : LOW);
+  digitalWrite(AD1, GetBit(address, 2) ? HIGH : LOW);
+  digitalWrite(AD2, GetBit(address, 3) ? HIGH : LOW);
+  digitalWrite(AD3, GetBit(address, 4) ? HIGH : LOW);
+  digitalWrite(AD4, GetBit(address, 5) ? HIGH : LOW);
+  digitalWrite(AD5, GetBit(address, 6) ? HIGH : LOW);
+  digitalWrite(AD6, GetBit(address, 7) ? HIGH : LOW);
+  digitalWrite(AD7, GetBit(address, 8) ? HIGH : LOW);
+  digitalWrite(AD8, GetBit(address, 9) ? HIGH : LOW);
+  digitalWrite(AD9, GetBit(address, 10) ? HIGH : LOW);
+  digitalWrite(AD10, GetBit(address, 11) ? HIGH : LOW);
+
+  delay(1);
+  digitalWrite(OE, LOW);
+  delay(1);
+  // Read data
+  int data[] = {
+      digitalRead(IO0),
+      digitalRead(IO1),
+      digitalRead(IO2),
+      digitalRead(IO3),
+      digitalRead(IO4),
+      digitalRead(IO5),
+      digitalRead(IO6),
+      digitalRead(IO7),
+  };
+  digitalWrite(OE, HIGH);
+  Serial.begin(9600);
+  while (!Serial)
+  {
+    delay(1);
+  }
+  Serial.println();
+  Serial.print(address);
+  Serial.print(':');
+  for (unsigned short int i = 0; i < EEPROM_DATA_LENGTH; i++)
+  {
+    Serial.print(data[i]);
+  }
+  Serial.println();
+  delay(50);
+  Serial.end();
+  delay(1);
+}
+
+// reads all the data from the EEPROM
+void readFullData()
+{
+  // setReadPins();
 
   for (unsigned short int i = 0; i < EEPROM_ADDRESS_SIZE; i++)
   {
-    // Sets Adress
-    digitalWrite(AD0, GetBit(i, 1) ? HIGH : LOW);
-    digitalWrite(AD1, GetBit(i, 2) ? HIGH : LOW);
-    digitalWrite(AD2, GetBit(i, 3) ? HIGH : LOW);
-    digitalWrite(AD3, GetBit(i, 4) ? HIGH : LOW);
-    digitalWrite(AD4, GetBit(i, 5) ? HIGH : LOW);
-    digitalWrite(AD5, GetBit(i, 6) ? HIGH : LOW);
-    digitalWrite(AD6, GetBit(i, 7) ? HIGH : LOW);
-    digitalWrite(AD7, GetBit(i, 8) ? HIGH : LOW);
-    digitalWrite(AD8, GetBit(i, 9) ? HIGH : LOW);
-    digitalWrite(AD9, GetBit(i, 10) ? HIGH : LOW);
-    digitalWrite(AD10, GetBit(i, 11) ? HIGH : LOW);
-
-    delay(1);
-    digitalWrite(OE, LOW);
-    delay(1);
-    // Read data
-    Serial.print(i);
-    Serial.print(" : ");
-    Serial.print(digitalRead(IO0));
-    Serial.print(digitalRead(IO1));
-    Serial.print(digitalRead(IO2));
-    Serial.print(digitalRead(IO3));
-    Serial.print(digitalRead(IO4));
-    Serial.print(digitalRead(IO5));
-    Serial.print(digitalRead(IO6));
-    Serial.print(digitalRead(IO7));
-    Serial.println();
-    digitalWrite(OE, HIGH);
-    delay(1);
+    readData(i);
   }
   digitalWrite(CE, HIGH);
 }
 
 void setup()
 {
+  delay(500);
 // Debuging
 #if DEBUG
 #if DEBUG_MODE != 4 && DEBUG_MODE != 3 && DEBUG_MODE != 0
@@ -425,7 +472,10 @@ void setup()
   // Sets up the GPIO pins
   pinMode(LED_BUILTIN, OUTPUT);
 
-  readData();
+  // setWritePins();
+  // writeEEPROMData();
+
+  readFullData();
 }
 
 void loop()
