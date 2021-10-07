@@ -271,12 +271,20 @@ void writeData(int address, int data)
   digitalWrite(IO7, GetBit(data, 8) ? HIGH : LOW);
 
   // enable when all pins are set
-  delay(5 * 1000);
+  delay(1000);
+  digitalWrite(OE, LOW);
+  delay(1000);
+  digitalWrite(OE, HIGH);
+  delay(1000);
   digitalWrite(WE, LOW);
-  delay(5 * 1000); // very short pulse but according to datasheet no max value
+  delay(1000); // very short pulse but according to datasheet no max value
   digitalWrite(WE, HIGH);
   // write data, max 10ms
-  delay(5 * 1000);
+  delay(1000);
+  digitalWrite(OE, LOW);
+  delay(1000);
+  digitalWrite(OE, HIGH);
+  delay(1000);
 }
 
 // set pins for writing data to EEPROM
