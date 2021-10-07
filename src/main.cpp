@@ -10,30 +10,30 @@
 #define EEPROM_NUMBER 1
 
 // GPIO pin definitions
-#define IO0 13 // F -> 13
-#define IO1 1  // T
-#define IO2 3  // T
-#define IO3 4  // T
-#define IO4 2  // T
-#define IO5 15 // F -> 15
-#define IO6 5  // F -> 5
-#define IO7 18 // F -> 18
+#define IO0 23
+#define IO1 25
+#define IO2 12
+#define IO3 16
+#define IO4 3
+#define IO5 17
+#define IO6 4
+#define IO7 1
 
-#define AD0 12  // T
-#define AD1 14  // T
-#define AD2 27  // T
-#define AD3 26  // T
-#define AD4 25  // T
-#define AD5 33  // T
-#define AD6 32  // T
-#define AD7 35  // T
-#define AD8 23  // T
-#define AD9 22  // T
-#define AD10 21 // T
+#define AD0 13
+#define AD1 35
+#define AD2 32
+#define AD3 14
+#define AD4 33
+#define AD5 26
+#define AD6 27
+#define AD7 34
+#define AD8 19
+#define AD9 15
+#define AD10 5
 
-#define WE 16 // T
-#define OE 17 // T
-#define CE 19 // T
+#define WE 2
+#define OE 18
+#define CE 21
 
 // Data to write to EEPROM
 #define EEPROM_DATA_LENGTH 8
@@ -427,7 +427,9 @@ void readData(int address)
       digitalRead(IO7),
   };
   digitalWrite(OE, HIGH);
+  // prins values to serial
   Serial.begin(9600);
+  // wait until serial is ready
   while (!Serial)
   {
     delay(1);
@@ -457,6 +459,16 @@ void readFullData()
   digitalWrite(CE, HIGH);
 }
 
+void startUpLED()
+{
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, LOW);
+  delay(50);
+  digitalWrite(LED_BUILTIN, HIGH);
+  delay(1000);
+  digitalWrite(LED_BUILTIN, LOW);
+}
+
 void setup()
 {
   delay(500);
@@ -469,13 +481,16 @@ void setup()
 #endif
 #endif
 
-  // Sets up the GPIO pins
-  pinMode(LED_BUILTIN, OUTPUT);
+  //signalize startup
+  startUpLED();
+  // write data to array
+  setData();
 
-  // setWritePins();
-  // writeEEPROMData();
+  // write data to EEPROM
+  setWritePins();
+  writeEEPROMData();
 
-  readFullData();
+  // readFullData();
 }
 
 void loop()
