@@ -2,8 +2,8 @@
 #include <math.h>
 
 // Debugging
-#define DEBUG false
-#define DEBUG_MODE 0 // 0 = Off, 1 = Array, 2 = Output, 3 = LED, 4 = Output Data
+#define DEBUG true
+#define DEBUG_MODE 3 // 0 = Off, 1 = Array, 2 = Output, 3 = LED, 4 = Output Data
 #define DEBUG_COUNTER_VALUE 10
 
 // Mode
@@ -281,6 +281,17 @@ void writeData(int address, int data)
   digitalWrite(WE, HIGH);
   // write data, max 10ms
   delay(1000);
+#if DEBUG
+#if DEBUG_MODE == 3
+  if (address == DEBUG_COUNTER_VALUE)
+  {
+    while (true)
+    {
+      delay(1000);
+    }
+  }
+#endif
+#endif
   digitalWrite(OE, LOW);
   delay(1000);
   digitalWrite(OE, HIGH);
@@ -328,6 +339,7 @@ void setWritePins()
 // writes the data from the array to the EEPROM
 void writeEEPROMData()
 {
+  setData();
   setWritePins();
 
   // Writes data to EEPROM
@@ -351,14 +363,6 @@ void writeEEPROMData()
       Serial.print(GetBit(eeprom_data[i], j + 1) ? "1" : "0");
     }
     Serial.println();
-#elif DEBUG_MODE == 3
-    if (i == DEBUG_COUNTER_VALUE)
-    {
-      while (true)
-      {
-        delay(1000);
-      }
-    }
 #endif
 #endif
   }
@@ -491,11 +495,8 @@ void setup()
 
   //signalize startup
   startUpLED();
-  // write data to array
-  setData();
 
-  // write data to EEPROM
-  setWritePins();
+  // initialize the EEPROM
   writeEEPROMData();
 
   // readFullData();
