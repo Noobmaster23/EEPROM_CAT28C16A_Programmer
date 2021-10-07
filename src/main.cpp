@@ -271,12 +271,12 @@ void writeData(int address, int data)
   digitalWrite(IO7, GetBit(data, 8) ? HIGH : LOW);
 
   // enable when all pins are set
-  delay(1);
+  delay(5 * 1000);
   digitalWrite(WE, LOW);
-  delay(1); // very short pulse but according to datasheet no max value
+  delay(5 * 1000); // very short pulse but according to datasheet no max value
   digitalWrite(WE, HIGH);
   // write data, max 10ms
-  delay(20);
+  delay(5 * 1000);
 }
 
 // set pins for writing data to EEPROM
@@ -461,8 +461,8 @@ void readFullData()
 
 void startUpLED()
 {
-  pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
+  pinMode(LED_BUILTIN, OUTPUT);
   delay(50);
   digitalWrite(LED_BUILTIN, HIGH);
   delay(1000);
