@@ -26,12 +26,14 @@ ARDUINO NANO | [0][0][0][WE][OE][A10][A9][A8][A7][A6][A5][A4][A3][A2][A1][A0] | 
 
 #define CE 7
 
-#define EEPROM_NUMBER 1
-#define EEPROM_ADDRESS_SIZE 2048
+#define EEPROM_NUMBER 1U
+#define EEPROM_ADDRESS_SIZE 2048U
 
 #define EEPROM_DATA_TYPE unsigned char
 
 #define EEPROM_ADDRESS_TYPE unsigned short int
+
+#define DEBUG_MODE 2 // 0 = off, 1 = print to serial, 2 = single write/read
 
 const EEPROM_ADDRESS_TYPE eeprom_data[][2] = {
 #if EEPROM_NUMBER == 1
@@ -278,6 +280,8 @@ void setWritePinMode()
   pinMode(SHIFT_DATA, OUTPUT);
 
   pinMode(CE, OUTPUT);
+
+  delay(1);
 }
 
 // Sets the pins for reading Data
@@ -303,6 +307,8 @@ void setReadPinMode()
   pinMode(SHIFT_DATA, OUTPUT);
 
   pinMode(CE, OUTPUT);
+
+  delay(1);
 }
 
 // sets the shift-registers to 0
@@ -340,9 +346,9 @@ void disableEEPROM()
 }
 
 // checks if the address is in the eeprom address list
-unsigned short checkAddress(EEPROM_ADDRESS_TYPE address)
+short checkAddress(EEPROM_ADDRESS_TYPE address)
 {
-  for (int i = 0; i < (sizeof(eeprom_data) / sizeof(eeprom_data[0])); i++)
+  for (EEPROM_ADDRESS_TYPE i = 0; i < (sizeof(eeprom_data) / sizeof(eeprom_data[0])); i++)
   {
     if (eeprom_data[i][0] == address)
     {
@@ -358,29 +364,37 @@ void fullEEPROMWrite()
   setWritePinMode();
 
   // write data
-  for (int i = 0; i < EEPROM_ADDRESS_SIZE; i++)
+  for (EEPROM_ADDRESS_TYPE i = 0; i < EEPROM_ADDRESS_SIZE; i++)
   {
-    unsigned short checkAddressResult = checkAddress(i); // is the position in the eeprom_data array where the correct address and data is
+    unsigned char writeData;
+    short checkAddressResult = checkAddress(i); // is the position in the eeprom_data array where the correct address and data is
     // checks if the address is defined
     if (checkAddressResult != -1)
     {
-      setPinData(eeprom_data[checkAddressResult][1]); // at 0 the address is stored, at 1 the data
+      writeData = eeprom_data[checkAddressResult][1]; // at 0 the address is stored, at 1 the data
     }
     else if (GetBit(i, 3) && !GetBit(i, 2) && !GetBit(i, 1))
     {
 // Because the Instruction has to be loaded every time set the instruction for the first step for every instruction to the same value
 #if EEPROM_NUMBER == 1
-      setPinData(0b00000001);
+      writeData = 0b00000001;
 #elif EEPROM_NUMBER == 2
-      setPinData(0b00000000);
+      writeData = 0b00000000;
 #elif EEPROM_NUMBER == 3
-      setPinData(0b10000000);
+      writeData = 0b10000000;
 #endif
     }
     else // if nothing was predefined, set data to 0
     {
-      setPinData(0);
+      writeData = 0;
     }
+#if DEBUG_MODE == 1
+    Serial.print("Writing: ");
+    Serial.print(writeData, BIN);
+    Serial.print(" at address: ");
+    Serial.println(i, BIN);
+#endif
+    setPinData(writeData);
     delay(1);
     writeShiftRegister(i); // write the address
     delay(1);
@@ -416,15 +430,53 @@ void readFullEEPROM()
   Serial.println("Reading EEPROM");
 
   // read data
-  for (int i = 0; i < EEPROM_ADDRESS_SIZE; i++)
+  for (EEPROM_ADDRESS_TYPE i = 0; i < EEPROM_ADDRESS_SIZE; i++)
   {
     readShiftRegister(i);
-    Serial.print(i);
-    Serial.print(" : ");
+    Serial.print(readDataPins(), BIN);
+    delay(1);
+    Serial.print(" at ");
     digitalWrite(CE, LOW);
-    Serial.println(readDataPins());
+    delay(1);
+    Serial.println(i, BIN);
     digitalWrite(CE, HIGH);
+    delay(1);
   }
+}
+
+// ride one byte of data to one address
+void writeEEPROM(EEPROM_ADDRESS_TYPE address, EEPROM_DATA_TYPE data)
+{
+  // set mode for writing
+  setWritePinMode();
+
+  // write data
+  setPinData(data);
+  delay(1);
+  writeShiftRegister(address); // write the address
+  delay(1);
+  digitalWrite(CE, LOW);
+  delay(1);
+  digitalWrite(CE, HIGH);
+  delay(20);
+}
+
+// read one byte of data from one address
+void readEEPROM(EEPROM_ADDRESS_TYPE address)
+{
+  // set mode for reading
+  setReadPinMode();
+
+  // read data
+  readShiftRegister(address);
+  Serial.print(readDataPins(), BIN);
+  delay(1);
+  Serial.print(" at ");
+  digitalWrite(CE, LOW);
+  delay(1);
+  Serial.println(address, BIN);
+  digitalWrite(CE, HIGH);
+  delay(1);
 }
 
 // gets called once on startup
@@ -433,11 +485,16 @@ void setup()
   // startup functions
   serialStart();
 
+#if DEBUG_MODE == 0
   // write EEPROM
   fullEEPROMWrite();
 
   // read EEPROM for verification
   readFullEEPROM();
+#elif DEBUG_MODE == 2
+  writeEEPROM(0, 210);
+  readEEPROM(210);
+#endif
 }
 
 // gets called repeatedly
