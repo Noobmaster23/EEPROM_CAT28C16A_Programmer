@@ -12,19 +12,19 @@ ARDUINO NANO | [0][0][0][WE][OE][A10][A9][A8][A7][A6][A5][A4][A3][A2][A1][A0] | 
 
 #include <Arduino.h>
 
-#define SHIFT_CLOCK 3
-#define SHIFT_DATA 13
+#define SHIFT_CLOCK 3 // T
+#define SHIFT_DATA 13 // T
 
-#define IO0 12
-#define IO1 8
-#define IO2 9
-#define IO3 11
-#define IO4 4
-#define IO5 10
-#define IO6 5
-#define IO7 2
+#define IO0 12 // T
+#define IO1 8  // T
+#define IO2 9  // T
+#define IO3 11 // T
+#define IO4 4  // T
+#define IO5 10 // T
+#define IO6 5  // T
+#define IO7 2  // T
 
-#define CE 7
+#define CE 7 // T
 
 #define EEPROM_NUMBER 1U
 #define EEPROM_ADDRESS_SIZE 2048U
@@ -33,7 +33,7 @@ ARDUINO NANO | [0][0][0][WE][OE][A10][A9][A8][A7][A6][A5][A4][A3][A2][A1][A0] | 
 
 #define EEPROM_ADDRESS_TYPE unsigned short int
 
-#define DEBUG_MODE 2 // 0 = off, 1 = print to serial, 2 = single write/read
+#define DEBUG_MODE 2 // 0 = off, 1 = print to serial, 2 = single write/read, 3 = Test Voltage
 
 const EEPROM_ADDRESS_TYPE eeprom_data[][2] = {
 #if EEPROM_NUMBER == 1
@@ -208,21 +208,24 @@ bool GetBit(EEPROM_DATA_TYPE b, unsigned char bitNumber)
 }
 
 // sets the data in the shift registers
-void setShiftRegisterData(EEPROM_DATA_TYPE data, unsigned char data_length = 11)
+void setShiftRegisterData(EEPROM_DATA_TYPE data, unsigned char data_length)
 {
   // Set address
   for (unsigned char i = 0; i < data_length; i++)
   {
     digitalWrite(SHIFT_DATA, GetBit(data, i));
+    delay(1);
     digitalWrite(SHIFT_CLOCK, LOW);
+    delay(1);
     digitalWrite(SHIFT_CLOCK, HIGH);
+    delay(1);
   }
 }
 
 // sets the shift-reigsters to write data
 void writeShiftRegister(EEPROM_ADDRESS_TYPE address)
 {
-  setShiftRegisterData(address);
+  setShiftRegisterData(address, 11);
 
   setShiftRegisterData(0b00001, 5);
 }
@@ -230,7 +233,7 @@ void writeShiftRegister(EEPROM_ADDRESS_TYPE address)
 // sets the shift-reigsters to read data
 void readShiftRegister(EEPROM_ADDRESS_TYPE address)
 {
-  setShiftRegisterData(address);
+  setShiftRegisterData(address, 11);
 
   setShiftRegisterData(0b00010, 5);
 }
@@ -331,7 +334,7 @@ void serialStart()
 void finishedMessage()
 {
   Serial.println("Finished");
-  delay(5000);
+  delay(1000 * 60);
 }
 
 // disable the EEPROM and set data and shift-registers to 0
@@ -390,9 +393,9 @@ void fullEEPROMWrite()
     }
 #if DEBUG_MODE == 1
     Serial.print("Writing: ");
-    Serial.print(writeData, BIN);
+    Serial.print(writeData);
     Serial.print(" at address: ");
-    Serial.println(i, BIN);
+    Serial.println(i);
 #endif
     setPinData(writeData);
     delay(1);
@@ -408,17 +411,18 @@ void fullEEPROMWrite()
   disableEEPROM();
 }
 
-EEPROM_DATA_TYPE readDataPins()
+String readDataPins()
 {
-  EEPROM_DATA_TYPE data = 0;
-  data |= digitalRead(IO0) << 1;
-  data |= digitalRead(IO1) << 2;
-  data |= digitalRead(IO2) << 3;
-  data |= digitalRead(IO3) << 4;
-  data |= digitalRead(IO4) << 5;
-  data |= digitalRead(IO5) << 6;
-  data |= digitalRead(IO6) << 7;
-  data |= digitalRead(IO7) << 8;
+  delay(1);
+  String data = "";
+  data += digitalRead(IO0);
+  data += digitalRead(IO1);
+  data += digitalRead(IO2);
+  data += digitalRead(IO3);
+  data += digitalRead(IO4);
+  data += digitalRead(IO5);
+  data += digitalRead(IO6);
+  data += digitalRead(IO7);
   return data;
 }
 
@@ -433,15 +437,17 @@ void readFullEEPROM()
   for (EEPROM_ADDRESS_TYPE i = 0; i < EEPROM_ADDRESS_SIZE; i++)
   {
     readShiftRegister(i);
-    Serial.print(readDataPins(), BIN);
+    Serial.print(readDataPins());
     delay(1);
     Serial.print(" at ");
     digitalWrite(CE, LOW);
     delay(1);
-    Serial.println(i, BIN);
+    Serial.println(i);
     digitalWrite(CE, HIGH);
     delay(1);
   }
+
+  disableEEPROM();
 }
 
 // ride one byte of data to one address
@@ -457,6 +463,13 @@ void writeEEPROM(EEPROM_ADDRESS_TYPE address, EEPROM_DATA_TYPE data)
   delay(1);
   digitalWrite(CE, LOW);
   delay(1);
+#if DEBUG_MODE == 3
+  while (Serial.available() == 0)
+  {
+    delay(1);
+  }
+  Serial.read();
+#endif
   digitalWrite(CE, HIGH);
   delay(20);
 }
@@ -469,12 +482,12 @@ void readEEPROM(EEPROM_ADDRESS_TYPE address)
 
   // read data
   readShiftRegister(address);
-  Serial.print(readDataPins(), BIN);
+  Serial.print(readDataPins());
   delay(1);
   Serial.print(" at ");
   digitalWrite(CE, LOW);
   delay(1);
-  Serial.println(address, BIN);
+  Serial.println(address);
   digitalWrite(CE, HIGH);
   delay(1);
 }
@@ -491,9 +504,9 @@ void setup()
 
   // read EEPROM for verification
   readFullEEPROM();
-#elif DEBUG_MODE == 2
-  writeEEPROM(0, 210);
-  readEEPROM(210);
+#elif DEBUG_MODE == 2 || DEBUG_MODE == 3
+  writeEEPROM(0b01010101, 0b10101010101);
+  readEEPROM(0b10101010101);
 #endif
 }
 
