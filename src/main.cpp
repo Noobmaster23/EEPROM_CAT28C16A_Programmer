@@ -222,7 +222,7 @@ void writeShiftRegister(EEPROM_ADDRESS_TYPE address)
 {
   setShiftRegisterData(address);
 
-  setShiftRegisterData(0b00001, 2);
+  setShiftRegisterData(0b00001, 5);
 }
 
 // sets the shift-reigsters to read data
@@ -230,7 +230,7 @@ void readShiftRegister(EEPROM_ADDRESS_TYPE address)
 {
   setShiftRegisterData(address);
 
-  setShiftRegisterData(0b00010, 2);
+  setShiftRegisterData(0b00010, 5);
 }
 
 // sets the data at the data pins
@@ -325,7 +325,7 @@ void serialStart()
 void finishedMessage()
 {
   Serial.println("Finished");
-  delay(1000);
+  delay(5000);
 }
 
 // disable the EEPROM and set data and shift-registers to 0
@@ -394,6 +394,39 @@ void fullEEPROMWrite()
   disableEEPROM();
 }
 
+EEPROM_DATA_TYPE readDataPins()
+{
+  EEPROM_DATA_TYPE data = 0;
+  data |= digitalRead(IO0) << 1;
+  data |= digitalRead(IO1) << 2;
+  data |= digitalRead(IO2) << 3;
+  data |= digitalRead(IO3) << 4;
+  data |= digitalRead(IO4) << 5;
+  data |= digitalRead(IO5) << 6;
+  data |= digitalRead(IO6) << 7;
+  data |= digitalRead(IO7) << 8;
+  return data;
+}
+
+void readFullEEPROM()
+{
+  // set mode for reading
+  setReadPinMode();
+
+  Serial.println("Reading EEPROM");
+
+  // read data
+  for (int i = 0; i < EEPROM_ADDRESS_SIZE; i++)
+  {
+    readShiftRegister(i);
+    Serial.print(i);
+    Serial.print(" : ");
+    digitalWrite(CE, LOW);
+    Serial.println(readDataPins());
+    digitalWrite(CE, HIGH);
+  }
+}
+
 // gets called once on startup
 void setup()
 {
@@ -402,6 +435,9 @@ void setup()
 
   // write EEPROM
   fullEEPROMWrite();
+
+  // read EEPROM for verification
+  readFullEEPROM();
 }
 
 // gets called repeatedly
