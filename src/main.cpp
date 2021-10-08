@@ -7,7 +7,7 @@ nano saves data (8 bits) so it can read/write
 WE and OE is also controlled by the shift-registers (2 bits)
 CE is controlled by the nano (1 bit)
 so data in shift registers looks like this: 
-ARDUINO NANO | [0][0][0][0][0][WE][OE][A10][A9][A8][A7][A6][A5][A4][A3][A2][A1][A0] | EEPROM
+ARDUINO NANO | [0][0][0][WE][OE][A10][A9][A8][A7][A6][A5][A4][A3][A2][A1][A0] | EEPROM
 */
 
 #include <Arduino.h>
@@ -15,35 +15,38 @@ ARDUINO NANO | [0][0][0][0][0][WE][OE][A10][A9][A8][A7][A6][A5][A4][A3][A2][A1][
 #define SHIFT_CLOCK 3
 #define SHIFT_DATA 13
 
-// TODO
-#define IO0 0
-#define IO1 0
-#define IO2 0
-#define IO3 0
-#define IO4 0
-#define IO5 0
-#define IO6 0
-#define IO7 0
+#define IO0 12
+#define IO1 8
+#define IO2 9
+#define IO3 11
+#define IO4 4
+#define IO5 10
+#define IO6 5
+#define IO7 2
 
-#define CE 0
+#define CE 7
 
 #define EEPROM_NUMBER 1
 #define EEPROM_ADDRESS_SIZE 2048
 
-unsigned int eeprom_data[EEPROM_ADDRESS_SIZE];
+#define EEPROM_DATA_TYPE unsigned char
+
+#define EEPROM_ADDRESS_TYPE unsigned short int
+
+EEPROM_DATA_TYPE eeprom_data[EEPROM_ADDRESS_SIZE];
 
 // Gets bit from an int
 // https://www.studymite.com/cpp/examples/program-to-get-nth-bit-of-a-number-in-cpp/
-bool GetBit(unsigned int b, unsigned int bitNumber)
+bool GetBit(EEPROM_DATA_TYPE b, unsigned char bitNumber)
 {
   return (1 & (b >> (bitNumber - 1)));
 }
 
 // sets the data in the shift registers
-void setShiftRegisterData(int data, int data_length = 11)
+void setShiftRegisterData(EEPROM_DATA_TYPE data, unsigned char data_length = 11)
 {
   // Set address
-  for (int i = 0; i < data_length; i++)
+  for (unsigned char i = 0; i < data_length; i++)
   {
     digitalWrite(SHIFT_DATA, GetBit(data, i));
     digitalWrite(SHIFT_CLOCK, LOW);
@@ -52,23 +55,23 @@ void setShiftRegisterData(int data, int data_length = 11)
 }
 
 // sets the shift-reigsters to write data
-void writeShiftRegister(int address)
+void writeShiftRegister(EEPROM_ADDRESS_TYPE address)
 {
   setShiftRegisterData(address);
 
-  setShiftRegisterData(0b01, 2); // 0 = OE, 1 = WE
+  setShiftRegisterData(0b00001, 2);
 }
 
 // sets the shift-reigsters to read data
-void readShiftRegister(int address)
+void readShiftRegister(EEPROM_ADDRESS_TYPE address)
 {
   setShiftRegisterData(address);
 
-  setShiftRegisterData(0b10, 2); // 1 = OE, 0 = WE
+  setShiftRegisterData(0b00010, 2);
 }
 
 // sets the data at the data pins
-void setData(int data)
+void setPinData(EEPROM_DATA_TYPE data)
 {
   digitalWrite(IO0, GetBit(data, 1));
   digitalWrite(IO1, GetBit(data, 2));
@@ -96,7 +99,7 @@ void setWritePinMode()
   digitalWrite(SHIFT_CLOCK, LOW);
   digitalWrite(SHIFT_DATA, LOW);
 
-  digitalWrite(CE, LOW);
+  digitalWrite(CE, HIGH);
 
   // set pins to the correct mode
   pinMode(IO0, OUTPUT);
@@ -121,7 +124,7 @@ void setReadPinMode()
   digitalWrite(SHIFT_CLOCK, LOW);
   digitalWrite(SHIFT_DATA, LOW);
 
-  digitalWrite(CE, LOW);
+  digitalWrite(CE, HIGH);
 
   // set pins to the correct mode
   pinMode(IO0, INPUT);
@@ -139,8 +142,8 @@ void setReadPinMode()
   pinMode(CE, OUTPUT);
 }
 
-// Writes the data to the array
-void setData()
+// writes the data to the array
+void setArrayData()
 {
   // Set Array all to 0
   for (unsigned short int i = 0; i < EEPROM_ADDRESS_SIZE; i++)
@@ -327,10 +330,75 @@ void setData()
 #endif
 }
 
+// sets the shift-registers to 0
+void resetShiftRegisters()
+{
+  setShiftRegisterData(0, 16);
+}
+
+void serialStart()
+{
+  Serial.begin(9600);
+  while (!Serial)
+  {
+    delay(1);
+  }
+  Serial.println("Serial started");
+  delay(100);
+}
+
+void finishedMessage()
+{
+  Serial.println("Finished");
+  delay(1000);
+}
+
+// disable the EEPROM and set data and shift-registers to 0
+void disableEEPROM()
+{
+  digitalWrite(CE, HIGH);
+
+  delay(20);
+
+  resetShiftRegisters();
+  setPinData(0);
+}
+
+void fullEEPROMWrite()
+{
+  // set mode for writing
+  setArrayData();
+  setWritePinMode();
+
+  // write data
+  for (int i = 0; i < EEPROM_ADDRESS_SIZE; i++)
+  {
+    setPinData(eeprom_data[i]);
+    delay(1);
+    writeShiftRegister(i);
+    delay(1);
+    digitalWrite(CE, LOW);
+    delay(1);
+    digitalWrite(CE, HIGH);
+    delay(20);
+  }
+
+  // finishing touches
+  disableEEPROM();
+}
+
 // gets called once on startup
-void setup() {}
+void setup()
+{
+  // startup functions
+  serialStart();
+
+  // write EEPROM
+  fullEEPROMWrite();
+}
 
 // gets called repeatedly
 void loop()
 {
+  finishedMessage();
 }
