@@ -33,7 +33,7 @@ ARDUINO NANO | [0][0][0][WE][OE][A10][A9][A8][A7][A6][A5][A4][A3][A2][A1][A0] | 
 
 #define EEPROM_ADDRESS_TYPE unsigned short int
 
-#define DEBUG_MODE 2 // 0 = off, 1 = print to serial, 2 = single write/read, 3 = Test Voltage, 4 = shift-register
+#define DEBUG_MODE 0 // 0 = off, 1 = print to serial, 2 = single write/read, 3 = Test Voltage, 4 = shift-register, 5 = check function
 
 const EEPROM_ADDRESS_TYPE eeprom_data[][2] = {
 #if EEPROM_NUMBER == 1
@@ -426,9 +426,9 @@ void fullEEPROMWrite()
     }
 #if DEBUG_MODE == 1
     Serial.print("Writing: ");
-    Serial.print(writeData);
+    Serial.print(writeData, BIN);
     Serial.print(" at address: ");
-    Serial.println(i);
+    Serial.println(i, BIN);
 #endif
     setPinData(writeData);
     delay(1);
@@ -549,125 +549,92 @@ void readEEPROM(EEPROM_ADDRESS_TYPE address)
   delay(1);
 }
 
-// checks if every address is saved correctely
+// checks if every address is saved correctely, if notify is = false, checkEEPROM will not print to serial and just return false if one or more addresses are not saved correctly
 bool checkEEPROM(bool notify = true)
 {
   bool return_val = true;
+  EEPROM_DATA_TYPE expectedData;
   // set mode for reading
   setReadPinMode();
+  Serial.println("Checking EEPROM");
   delay(1);
 
   // read data
   for (EEPROM_ADDRESS_TYPE i = 0; i < EEPROM_ADDRESS_SIZE; i++)
   {
+    expectedData = 0;
     readShiftRegister(i);
     delay(1);
-    pinMode(CE, LOW);
+    digitalWrite(CE, LOW);
     delay(1);
-    EEPROM_DATA_TYPE data = readDataPins();
+    EEPROM_DATA_TYPE readData = readDataPins();
+#if DEBUG_MODE == 5
+    Serial.println(readDataPins(), BIN);
+#endif
     delay(1);
-    pinMode(CE, HIGH);
+    digitalWrite(CE, HIGH);
     delay(1);
     short checkAddressResult = checkAddress(i); // is the position in the eeprom_data array where the correct address and data is
     // checks if the address is defined
     if (checkAddressResult != -1)
     {
-      EEPROM_DATA_TYPE dataFromEEPROM = eeprom_data[checkAddressResult][1]; // at 0 the address is stored, at 1 the data
-      if (data != dataFromEEPROM)
-      {
-        if (notify)
-        {
-          Serial.print("Data at address: ");
-          Serial.print(i, BIN);
-          Serial.print(" is not correct: ");
-          Serial.print(data, BIN);
-          Serial.print(" should be: ");
-          Serial.println(dataFromEEPROM, BIN);
-          return_val = false;
-        }
-        else
-        {
-          return false;
-        }
-      }
-      else
-      {
-        if (notify)
-        {
-          Serial.print("Data at address: ");
-          Serial.print(i, BIN);
-          Serial.print(" is correct: ");
-          Serial.println(data, BIN);
-        }
-      }
+#if DEBUG_MODE == 5
+      Serial.print("Checking: ");
+      Serial.print(readData, BIN);
+      Serial.print(" checkAddressResult: ");
+      Serial.print(checkAddressResult);
+#endif
+      expectedData = eeprom_data[checkAddressResult][1]; // at 0 the address is stored, at 1 the data
+#if DEBUG_MODE == 5
+      Serial.print(" Data: ");
+      Serial.println(expectedData, BIN);
+#endif
     }
     else if (GetBit(i, 3) && !GetBit(i, 2) && !GetBit(i, 1))
     {
-#if EEPROM_NUMBER == 1
-      EEPROM_DATA_TYPE dataFromEEPROM = 0b00000001;
-#elif EEPROM_NUMBER == 2
-      EEPROM_DATA_TYPE dataFromEEPROM = 0b00000000;
-#elif EEPROM_NUMBER == 3
-      EEPROM_DATA_TYPE dataFromEEPROM = 0b10000000;
+#if DEBUG_MODE == 5
+      Serial.print("Address: ");
+      Serial.print(i, BIN);
+      Serial.print(" Check: ");
+      Serial.println((GetBit(i, 3) && !GetBit(i, 2) && !GetBit(i, 1)));
 #endif
-      if (data != dataFromEEPROM)
+#if EEPROM_NUMBER == 1
+      expectedData = 0b00000001;
+#elif EEPROM_NUMBER == 2
+      expectedData = 0b00000000;
+#elif EEPROM_NUMBER == 3
+      expectedData = 0b10000000;
+#endif
+    }
+    if (readData != expectedData)
+    {
+      if (notify)
       {
-        if (notify)
-        {
-          Serial.print("Data at address: ");
-          Serial.print(i, BIN);
-          Serial.print(" is not correct: ");
-          Serial.print(data, BIN);
-          Serial.print(" should be: ");
-          Serial.println(dataFromEEPROM, BIN);
-          return_val = false;
-        }
-        else
-        {
-          return false;
-        }
+        Serial.print("Data at address: ");
+        Serial.print(i, BIN);
+        Serial.print(" is not correct: ");
+        Serial.print(readData, BIN);
+        Serial.print(" should be: ");
+        Serial.println(expectedData, BIN);
+        return_val = false;
       }
       else
       {
-        if (notify)
-        {
-          Serial.print("Data at address: ");
-          Serial.print(i, BIN);
-          Serial.print(" is correct: ");
-          Serial.println(data, BIN);
-        }
+        return false;
       }
     }
     else
     {
-      if (data != 0)
+      if (notify)
       {
-        if (notify)
-        {
-          Serial.print("Data at address: ");
-          Serial.print(i, BIN);
-          Serial.print(" is not correct: ");
-          Serial.print(data, BIN);
-          Serial.print(" should be: ");
-          Serial.println(0, BIN);
-          return_val = false;
-        }
-        else
-        {
-          return false;
-        }
-      }
-      else
-      {
-        if (notify)
-        {
-          Serial.print("Data at address: ");
-          Serial.print(i, BIN);
-          Serial.print(" is correct: ");
-          Serial.println(data, BIN);
-        }
+        Serial.print("Data at address: ");
+        Serial.print(i, BIN);
+        Serial.print(" is correct: ");
+        Serial.println(readData, BIN);
       }
     }
+#if DEBUG_MODE == 5
+#endif
   }
 
   disableEEPROM();
@@ -689,6 +656,9 @@ void setup()
 
   // check EEPROM for verification
   checkEEPROM();
+#elif DEBUG_MODE == 1
+  fullEEPROMWrite();
+  readFullEEPROM();
 #elif DEBUG_MODE == 2 || DEBUG_MODE == 3
   for (int i; i < 100; i++)
   {
@@ -699,6 +669,8 @@ void setup()
   }
 #elif DEBUG_MODE == 4
   readEEPROM(0b10101101101);
+#elif DEBUG_MODE == 5
+  checkEEPROM();
 #endif
 }
 
