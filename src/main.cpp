@@ -33,7 +33,7 @@ ARDUINO NANO | [0][0][0][WE][OE][A10][A9][A8][A7][A6][A5][A4][A3][A2][A1][A0] | 
 
 #define EEPROM_ADDRESS_TYPE unsigned short int
 
-#define DEBUG_MODE 3 // 0 = off, 1 = print to serial, 2 = single write/read, 3 = Test Voltage, 4 = shift-register
+#define DEBUG_MODE 2 // 0 = off, 1 = print to serial, 2 = single write/read, 3 = Test Voltage, 4 = shift-register
 
 const EEPROM_ADDRESS_TYPE eeprom_data[][2] = {
 #if EEPROM_NUMBER == 1
@@ -540,13 +540,12 @@ void readEEPROM(EEPROM_ADDRESS_TYPE address)
   // read data
   readShiftRegister(address);
   delay(1);
-  Serial.print(readDataPins(), BIN);
-  delay(1);
-  Serial.print(" at ");
   digitalWrite(CE, LOW);
   delay(1);
-  Serial.println(address, BIN);
+  Serial.print(readDataPins(), BIN);
+  Serial.print(" at ");
   digitalWrite(CE, HIGH);
+  Serial.println(address, BIN);
   delay(1);
 }
 
@@ -688,7 +687,7 @@ void setup()
 #elif DEBUG_MODE == 2 || DEBUG_MODE == 3
   for (int i; i < 100; i++)
   {
-    // writeEEPROM(0b10101010101, 0b10101010);
+    // writeEEPROM(0b10101010101, 0b00000001);
     readEEPROM(0b10101010101);
 
     disableEEPROM();
