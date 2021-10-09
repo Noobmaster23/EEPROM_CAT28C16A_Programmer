@@ -493,6 +493,7 @@ void readFullEEPROM()
   for (EEPROM_ADDRESS_TYPE i = 0; i < EEPROM_ADDRESS_SIZE; i++)
   {
     readShiftRegister(i);
+    delay(1);
     Serial.print(readDataPins(), BIN);
     delay(1);
     Serial.print(" at ");
@@ -538,6 +539,7 @@ void readEEPROM(EEPROM_ADDRESS_TYPE address)
 
   // read data
   readShiftRegister(address);
+  delay(1);
   Serial.print(readDataPins(), BIN);
   delay(1);
   Serial.print(" at ");
@@ -554,6 +556,7 @@ bool checkEEPROM(bool notify = true)
   bool return_val = true;
   // set mode for reading
   setReadPinMode();
+  delay(1);
 
   // read data
   for (EEPROM_ADDRESS_TYPE i = 0; i < EEPROM_ADDRESS_SIZE; i++)
