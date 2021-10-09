@@ -494,10 +494,10 @@ void readFullEEPROM()
   {
     readShiftRegister(i);
     delay(1);
-    Serial.print(readDataPins(), BIN);
-    delay(1);
-    Serial.print(" at ");
     digitalWrite(CE, LOW);
+    delay(1);
+    Serial.print(readDataPins(), BIN);
+    Serial.print(" at ");
     delay(1);
     Serial.println(i, BIN);
     digitalWrite(CE, HIGH);
@@ -562,7 +562,12 @@ bool checkEEPROM(bool notify = true)
   {
     readShiftRegister(i);
     delay(1);
+    pinMode(CE, LOW);
+    delay(1);
     EEPROM_DATA_TYPE data = readDataPins();
+    delay(1);
+    pinMode(CE, HIGH);
+    delay(1);
     short checkAddressResult = checkAddress(i); // is the position in the eeprom_data array where the correct address and data is
     // checks if the address is defined
     if (checkAddressResult != -1)
