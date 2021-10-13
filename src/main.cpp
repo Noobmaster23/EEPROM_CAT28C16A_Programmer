@@ -26,7 +26,7 @@ ARDUINO NANO | [0][0][0][WE][OE][A10][A9][A8][A7][A6][A5][A4][A3][A2][A1][A0] | 
 
 #define CE 7 // T
 
-#define EEPROM_NUMBER 1
+#define EEPROM_NUMBER 3
 #define EEPROM_ADDRESS_SIZE 2048U
 
 #define EEPROM_DATA_TYPE unsigned char
@@ -617,7 +617,7 @@ bool checkEEPROM(bool notify = true)
       expectedData = 0b10000000;
 #endif
     }
-    readData = reverse(readData); // make it correct
+    expectedData = reverse(expectedData); // make it correct
     if (readData != expectedData)
     {
       if (notify)
