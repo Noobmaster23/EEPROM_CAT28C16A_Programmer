@@ -417,7 +417,7 @@ void fullEEPROMWrite()
     // checks if the address is defined
     if (checkAddressResult != -1)
     {
-      writeData = reverse(eeprom_data[checkAddressResult][1]); // at 0 the address is stored, at 1 the data
+      writeData = eeprom_data[checkAddressResult][1]; // at 0 the address is stored, at 1 the data
     }
     else if (GetBit(i, 3) && !GetBit(i, 2) && !GetBit(i, 1))
     {
@@ -434,6 +434,7 @@ void fullEEPROMWrite()
     {
       writeData = 0;
     }
+    writeData = reverse(writeData); // make it correct
 #if DEBUG_MODE == 1
     Serial.print("Writing: ");
     Serial.print(writeData, BIN);
@@ -594,7 +595,7 @@ bool checkEEPROM(bool notify = true)
       Serial.print(" checkAddressResult: ");
       Serial.print(checkAddressResult);
 #endif
-      expectedData = reverse(eeprom_data[checkAddressResult][1]); // at 0 the address is stored, at 1 the data
+      expectedData = eeprom_data[checkAddressResult][1]; // at 0 the address is stored, at 1 the data
 #if DEBUG_MODE == 5
       Serial.print(" Data: ");
       Serial.println(expectedData, BIN);
@@ -616,6 +617,7 @@ bool checkEEPROM(bool notify = true)
       expectedData = 0b10000000;
 #endif
     }
+    readData = reverse(readData); // make it correct
     if (readData != expectedData)
     {
       if (notify)
