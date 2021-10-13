@@ -207,6 +207,16 @@ bool GetBit(unsigned int b, unsigned char bitNumber)
   return (1 & (b >> (bitNumber - 1)));
 }
 
+// reverses a byte
+// https://stackoverflow.com/a/2602885/13556449
+unsigned char reverse(unsigned char b)
+{
+  b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;
+  b = (b & 0xCC) >> 2 | (b & 0x33) << 2;
+  b = (b & 0xAA) >> 1 | (b & 0x55) << 1;
+  return b;
+}
+
 // sets the data in the shift registers
 void setShiftRegisterData(unsigned int data, unsigned char data_length)
 {
@@ -407,7 +417,7 @@ void fullEEPROMWrite()
     // checks if the address is defined
     if (checkAddressResult != -1)
     {
-      writeData = eeprom_data[checkAddressResult][1]; // at 0 the address is stored, at 1 the data
+      writeData = reverse(eeprom_data[checkAddressResult][1]); // at 0 the address is stored, at 1 the data
     }
     else if (GetBit(i, 3) && !GetBit(i, 2) && !GetBit(i, 1))
     {
@@ -584,7 +594,7 @@ bool checkEEPROM(bool notify = true)
       Serial.print(" checkAddressResult: ");
       Serial.print(checkAddressResult);
 #endif
-      expectedData = eeprom_data[checkAddressResult][1]; // at 0 the address is stored, at 1 the data
+      expectedData = reverse(eeprom_data[checkAddressResult][1]); // at 0 the address is stored, at 1 the data
 #if DEBUG_MODE == 5
       Serial.print(" Data: ");
       Serial.println(expectedData, BIN);
