@@ -1,0 +1,65 @@
+*13.10.2021 14:32*
+#### EEPROM In:
+- 0
+- 0
+- 1
+- X
+- X
+- X
+- X
+- X
+- X
+- X
+- X
+#### EEPROM Out:
+- 0
+- 0
+- 1
+- 0
+- 0
+- 0
+- 0
+- 0
+- - -
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- - -
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 1
+#### Instruction Register In:
+- 1
+- 1
+- 1
+- 1
+- 1
+- 1
+- 1
+- 1
+- 1
+#### Instruction Register Out:
+- 1
+- 1
+- 1
+- 1
+- 1
+- 1
+- 1
+- 1
+- - -
+# EEPROM Programmed wrongly
+- physical connection --> 0 = AO, 7 = PCO
+- programmed --> 0 = PCO, 7 = AO 
+- have to change it programmatically --> revert number
+- programm eeprom once again (13.10.2021 15:31)

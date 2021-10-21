@@ -1,0 +1,30 @@
+*20.10.2021 22:50*
+- started bulding on the 19.10.2021
+- continue building (20.10.2021 22:51)
+- doesn't seem to work (20.10.2021 23:41)
+- - output is 1000 0100 when data all = 0
+- testing if expected volatage (20.10.2021 23:43)
+- first tranceiver voltage at 0.6V (really high for 0) (20.10.2021 23:46)
+- - ground not connected (20.10.2021 23:48)
+- 0001 0100 when data 0 (20.10.2021 23:54)
+- *first tranceiver should work fine (20.10.2021 23:55)*
+- C0 not connected to ground (fixed it) (20.10.2021 23:59)
+- 0000 1000 at Data 0
+- sum outputs of first and second full adder are correct (21.10.2021 00:01)
+- 3rd full adder first sum 1, b1 high (should be both 0) (21.10.2021 00:03)
+- forgot to connect b1 (21.10.2021 00:06)
+- didn't forget to connect but rather connected it wrongly (two cables to a1) (21.10.2021 00:07)
+- - fixed it
+- 0000 0000 at data 0 (21.10.2021 00:07)
+- 0000 0000 at data 0 * 1 (21.10.2021 00:08)
+- 0000 1000 at data 1 * 1 (21.10.2021 00:11)
+- data from first tranceiver gets sent wrongly, have to reverse it (21.10.2021 00:18)
+- reversed order (21.10.2021 00:23)
+- 0001 0000 ad data 0 (21.10.2021 00:24)
+- loose cable (21.10.2021 00:27)
+- 0000 0000 at data 0 (21.10.2021 00:27)
+- 0000 0000 at data 1 * 1 (21.10.2021 00:28)
+- testing 2 * 3 (21.10.2021 00:29)
+- 0000 0110 at 0011 * 0010 which is correct (21.10.2021 00:32)
+- 1101 0001 at 1111 * 1111 which is correct (21.10.2021 00:34)
+- **IT WORKS :D**
